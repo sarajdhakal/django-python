@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from .models import Category, Expense
 from .serializers import CategorySerializer, ExpenseSerializer
+from django.db.models import Sum
 
 
 @api_view(["GET", "POST"])
@@ -27,7 +28,7 @@ def expense_list(request):
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
         if start_date:
-            expenses = expenses.filter(date__gt=start_date)
+            expenses = expenses.filter(date__gte=start_date)
         if end_date:
             expenses = expenses.filter(date__lte=end_date)
 
@@ -37,7 +38,7 @@ def expense_list(request):
     serializer = ExpenseSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    return Response(serialzer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET", "PUT", "DELETE"])
