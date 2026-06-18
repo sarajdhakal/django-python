@@ -8,6 +8,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-me")
+EXCHANGE_RATE_API_URL = os.getenv(
+    'EXCHANGE_RATE_API_URL', 'https://api.exchangerate.host')
+EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
+
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_CHAT_ID = os.getenv('BOT_CHAT_ID')
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
 

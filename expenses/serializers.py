@@ -6,18 +6,29 @@ from .models import Category, Expense
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ["id", "name", "description"]
+        fields = ["id", "name", "description", "monthly_limit"]
         read_only_fields = ["id"]
 
     def validate_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Name cannot be empty.")
+        if not value or not value.strip():
+            raise serializers.ValidationError("Name can't be empty.")
 
-        if request := self.context.get("request"):
+        request = self.context.get("request")
+
+        if request:
             user = request.user
             if Category.objects.filter(user=user, name=value).exists():
                 raise serializers.ValidationError(
-                    "You already have a category with this name.")
+                    "You already have a category with this name."
+                )
+
+        return value
+
+    def validate_monthly_limit(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError(
+                "Monthly limit must be greater than zero."
+            )
 
         return value
 
@@ -25,13 +36,33 @@ class CategorySerializer(serializers.ModelSerializer):
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
-        fields = ["id", "title", "amount", "category", "date", "notes"]
+        fields = [
+            "id",
+            "title",
+            "amount",
+            "currency",
+            "category",
+            "date",
+            "notes",
+        ]
         read_only_fields = ["id"]
 
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError(
-                "Amount must be greater than zero.")
+                "Amount must be greater than zero."
+            )
+        return value
+
+    def validate_currency(self, value):
+        value = value.upper()
+
+        allowed = [choice[0] for choice in Expense.CURRENCY_CHOICES]
+        if value not in allowed:
+            raise serializers.ValidationError(
+                "Currency didn't match any allowed options."
+            )
+
         return value
 
     def validate_category(self, value):
@@ -39,6 +70,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
         if request and value.user != request.user:
             raise serializers.ValidationError(
-                "You can only use your own categories.")
+                "You can only use your own categories."
+            )
 
         return value
